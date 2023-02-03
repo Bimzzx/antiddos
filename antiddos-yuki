@@ -129,6 +129,39 @@ clear;
  "$IP" -I INPUT -i lo -j ACCEPT
  "$IP" -I OUTPUT -o lo -j ACCEPT
 
+# ---- Bimzzx ----
+# --------------------------------
+ "$IP" -A FORWARD -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j REJECT
+ "$IP" -A FORWARD -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j DROP
+ "$IP" -A OUTPUT -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j REJECT
+ "$IP" -A OUTPUT -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j DROP
+ "$IP" -t nat -A PREROUTING -p udp --dport 7777 -s 127.0.0.1 -m string --algo bm --string 'SAMP' -j REDIRECT --to-port 7777
+ "$IP" -t nat -A PREROUTING -p udp --dport 7777 -m string -- algo bm --string 'SAMP' -j REDIRECT --to-port 7777
+ "$IP" -t mangle -A PREROUTING -p udp --dport 7777 -m limit --limit 1/s --limit-burst 1 -j RETURN
+ "$IP" -t mangle -A PREROUTING -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j RETURN
+ "$IP" -t mangle -A PREROUTING -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j DROP
+ "$IP" -t mangle -A PREROUTING -p udp --dport 30000:65535 -m geoip ! --src-cc ID,MY,US,CN,SC -j RETURN
+ "$IP" -t mangle -A PREROUTING -p tcp --dport 1:65535 -m geoip ! --src-cc ID,MY,US,CN,SC -j RETURN
+ "$IP" -t mangle -A PREROUTING -p udp --dport 1:7776 -j RETURN
+ "$IP" -t mangle -A PREROUTING -p udp --dport 7778:30000 -j RETURN
+ "$IP" -A INPUT -p udp --dport 7777 -m limit --limit 1/s --limit-burst 1 -j REJECT
+ "$IP" -A INPUT -p udp --dport 7777 -i eth0 -m state --state NEW -m recent --update --seconds 3 --hitcount 3 -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo bm --string 'SAMP' -m hashlimit ! --hashlimit-upto 3/sec --hashlimit-burst 3/sec --hashlimit-mode srcip --hashlimit-name query -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string'|081e77da|' -m recent --name test ! --rcheck  -m recent --name test --set -j  DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|081e77da|'  -m recent --name test --rcheck --seconds 2  --hitcount 1 -j DROP 
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e63|' -m recent --name limitC7777 ! --rcheck -m recent --name limitC7777 --set -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e63|' -m recent --name limitC7777 --rcheck --seconds 2 --hitcount 1   -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e69|' -m recent --name limitI7777 ! --rcheck -m recent --name limitI7777 --set 
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e69|' -m recent --name limitI7777 --rcheck --seconds 2 --hitcount 1   -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e72|' -m recent --name limitR7777 ! --rcheck -m recent --name limitR7777 --set -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e72|' -m recent --name limitR7777 --rcheck --seconds 2 --hitcount 1 -j DROP
+ "$IP" -I INPUT -p udp --dport 7777 -m string --algo kmp --hex-string '|53414d50|' -m string --algo kmp --hex-string '|611e72|' -m recent --name limitR7777 --rcheck --seconds 2 --hitcount 1 -j DROP
+ "$IP" -A INPUT -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j REJECT
+ "$IP" -A INPUT -p udp --dport 7777 -m geoip ! --src-cc ID,MY -j DROP
+ "$IP" -A INPUT -p udp --dport 30000:65535 -m geoip ! --src-cc ID,MY,US,CN,SC -j REJECT
+ "$IP" -A INPUT -p udp --dport 1:7776 -j REJECT
+ "$IP" -A INPUT -p udp --dport 7778:30000 -j REJECT
+
 # Protection against SYN-DoS
 # --------------------------------
  "$IP" -t raw -I PREROUTING -p tcp --syn --match hashlimit --hashlimit-above 4/second --hashlimit-mode srcip --hashlimit-name synflood -j DROP
